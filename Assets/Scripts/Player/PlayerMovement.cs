@@ -38,6 +38,8 @@ public class PlayerMovement : MonoBehaviour
     #region INPUT
     private Vector2 _moveInput;
     public float _lastPressedJumpTime { get; private set; }
+    [SerializeField] private InputActionReference move;
+    [SerializeField] private InputActionReference jump;
     #endregion
 
     #region CHECK PARAMETERS
@@ -54,11 +56,6 @@ public class PlayerMovement : MonoBehaviour
     #region LAYERS & TAGS
     [Header("Layers & Tags")]
     [SerializeField] private LayerMask _groundLayer;
-    #endregion
-
-    #region PLATFORM VARIABLES
-    private bool _IsOnPlatform;
-    private Rigidbody2D _platformRBody2D;
     #endregion
 
     private void Awake()
@@ -84,11 +81,14 @@ public class PlayerMovement : MonoBehaviour
         #endregion
 
         #region INPUT HANDLER
-        //_moveInput.x = Input.GetAxisRaw("Horizontal");
-        //_moveInput.y = Input.GetAxisRaw("Vertical");
+        /*_moveInput.x = Input.GetAxisRaw("Horizontal");
+        _moveInput.y = Input.GetAxisRaw("Vertical");*/
+        _moveInput.x = move.action.ReadValue<Vector2>().x;
+        _moveInput.y = move.action.ReadValue<Vector2>().y;
 
         if (_moveInput.x != 0)
             CheckDirectionToFace(_moveInput.x > 0);
+
 
         /*if (Input.GetKeyDown(KeyCode.Space))
         {
@@ -99,6 +99,15 @@ public class PlayerMovement : MonoBehaviour
         {
             OnJumpUpInput();
         }*/
+        if (jump.action.WasPerformedThisFrame())
+        {
+            OnJumpInput();
+        }
+
+        if (jump.action.WasReleasedThisFrame())
+        {
+            OnJumpUpInput();
+        }
         #endregion
 
         #region COLLISION CHECKS
@@ -178,11 +187,12 @@ public class PlayerMovement : MonoBehaviour
         #endregion*/
 
         #region GRAVITY
-        if (IsSliding)
+        /*if (IsSliding)
         {
             SetGravityScale(0);
-        }
-        else if (_rb.velocity.y < 0 && _moveInput.y < 0)
+        }*/
+        // Might remove higher fall speed while holding down "Down" button
+        if (_rb.velocity.y < 0 && _moveInput.y < 0)
         {
             // Much higher gravity if holding down
             SetGravityScale(Data.gravityScale * Data.fastFallGravityMult);
@@ -250,37 +260,6 @@ public class PlayerMovement : MonoBehaviour
         if (CanJumpCut() || CanWallJumpCut())
             _isJumpCut = true;
     }
-    public void Move(InputAction.CallbackContext context)
-    {
-        _moveInput.x = context.ReadValue<Vector2>().x;
-        _moveInput.y = context.ReadValue<Vector2>().y;
-    }
-    public void Jump(InputAction.CallbackContext context)
-    {
-        if (context.started)
-        {
-            OnJumpInput();
-        }
-        if (context.canceled)
-        {
-            OnJumpUpInput();
-        }
-    }
-    /*public void ReturnWatch(InputAction.CallbackContext context)
-    {
-        _inputEventChannel.ReturnButtonPressed(context);
-    }
-    public void Pause(InputAction.CallbackContext context)
-    {
-        if (context.performed)
-        {
-            GameManager.Instance.SetGameState(GameState.Pause);
-        }
-    }
-    public void Interact(InputAction.CallbackContext context)
-    {
-        _inputEventChannel.InteractButtonPressed(context);
-    }*/
     #endregion
 
     #region RUN METHODS
@@ -393,7 +372,7 @@ public class PlayerMovement : MonoBehaviour
     {
         _rb.gravityScale = scale;
     }
-    void OnCollisionEnter2D(Collision2D collision)
+   /* void OnCollisionEnter2D(Collision2D collision)
     {
         if (collision.gameObject.tag == "Platform")
         {
@@ -408,7 +387,7 @@ public class PlayerMovement : MonoBehaviour
             _IsOnPlatform = false;
             _platformRBody2D = null;
         }
-    }
+    }*/
 
     /*void LoadGame(GameData data)
     {
