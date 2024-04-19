@@ -51,12 +51,6 @@ public class PlayerData : ScriptableObject
     public bool doTurnOnWallJump; // Player will rotate to face wall jumping direction
 
     [Space(20)]
-
-    [Header("Slide")]
-    public float slideSpeed;
-    public float slideAccel;
-    public float nonSlideFriction;
-
     [Header("Assists")]
     [Range(0.01f, 0.5f)] public float coyoteTime; //Grace period after falling off a platform, where you can still jump
     [Range(0.01f, 0.5f)] public float jumpInputBufferTime; //Grace period after pressing jump where a jump will be automatically performed once the requirements (eg. being grounded) are met.

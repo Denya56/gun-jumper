@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: DefaultPlayerData
   m_EditorClassIdentifier: 
   gravityStrength: -66.666664
-  gravityScale: 6.795786
+  gravityScale: 2.222222
   fallGravityMult: 1.5
   maxFallSpeed: 25
   fastFallGravityMult: 2
@@ -38,8 +38,5 @@ MonoBehaviour:
   wallJumpRunLerp: 0.5
   wallJumpTime: 0.15
   doTurnOnWallJump: 1
-  slideSpeed: 0
-  slideAccel: 0
-  nonSlideFriction: 0
   coyoteTime: 0.1
   jumpInputBufferTime: 0.1

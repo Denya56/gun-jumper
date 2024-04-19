@@ -5,7 +5,6 @@ using UnityEngine.InputSystem;
 public class PlayerMovement : MonoBehaviour
 {
     public PlayerData Data;
-    //[SerializeField] private InputEventChannel _inputEventChannel;
 
     #region COMPONENTS
     public Rigidbody2D _rb { get; private set; }
@@ -17,7 +16,6 @@ public class PlayerMovement : MonoBehaviour
     public bool IsFacingRight { get; private set; }
     public bool IsJumping { get; private set; }
     public bool IsWallJumping { get; private set; }
-    public bool IsSliding { get; private set; }
 
     // Timers
     private float _lastOnGroundTime { get; set; }
@@ -63,6 +61,7 @@ public class PlayerMovement : MonoBehaviour
         _rb = GetComponent<Rigidbody2D>();
         _animator = GetComponent<Animator>();
         _sr = GetComponent<SpriteRenderer>();
+        EventManager.Instance.OnGunShoot += Shoot;
     }
     void Start()
     {
@@ -81,24 +80,12 @@ public class PlayerMovement : MonoBehaviour
         #endregion
 
         #region INPUT HANDLER
-        /*_moveInput.x = Input.GetAxisRaw("Horizontal");
-        _moveInput.y = Input.GetAxisRaw("Vertical");*/
         _moveInput.x = move.action.ReadValue<Vector2>().x;
         _moveInput.y = move.action.ReadValue<Vector2>().y;
 
         if (_moveInput.x != 0)
             CheckDirectionToFace(_moveInput.x > 0);
 
-
-        /*if (Input.GetKeyDown(KeyCode.Space))
-        {
-            OnJumpInput();
-        }
-
-        if (Input.GetKeyUp(KeyCode.Space))
-        {
-            OnJumpUpInput();
-        }*/
         if (jump.action.WasPerformedThisFrame())
         {
             OnJumpInput();
@@ -159,6 +146,7 @@ public class PlayerMovement : MonoBehaviour
         if (CanJump() && _lastPressedJumpTime > 0)
         {
             IsJumping = true;
+            Debug.Log(IsJumping);
             IsWallJumping = false;
             _isJumpCut = false;
             _isJumpFalling = false;
@@ -179,18 +167,8 @@ public class PlayerMovement : MonoBehaviour
         }
         #endregion
 
-        /*#region SLIDE CHECKS
-        if (CanSlide() && ((_lastOnWallLeftTime > 0 && _moveInput.x < 0) || (_lastOnWallRightTime > 0 && _moveInput.x > 0)))
-            IsSliding = true;
-        else
-            IsSliding = false;
-        #endregion*/
 
         #region GRAVITY
-        /*if (IsSliding)
-        {
-            SetGravityScale(0);
-        }*/
         // Might remove higher fall speed while holding down "Down" button
         if (_rb.velocity.y < 0 && _moveInput.y < 0)
         {
@@ -232,22 +210,10 @@ public class PlayerMovement : MonoBehaviour
         else
             Run(1);
 
-        // Slide
-        /*if (IsSliding)
-        {
-            _rb.sharedMaterial.friction = 0;
-            Slide();
-        }*/
-        //else _rb.sharedMaterial.friction = Data.nonSlideFriction;
-
-
-
-        /*_animator.SetBool("IsRunning", _moveInput.x != 0);
+        _animator.SetBool("IsWalking", _moveInput.x != 0);
         _animator.SetBool("IsGrounded", _lastOnGroundTime > 0);
         _animator.SetBool("IsFalling", _rb.velocity.y < 0 && _lastOnGroundTime <= 0);
         _animator.SetBool("IsJumping", IsJumping);
-        _animator.SetBool("IsSliding", IsSliding);
-        _animator.SetBool("IsWallJumping", IsWallJumping);*/
     }
 
     #region INPUT CALLBACKS
@@ -353,41 +319,11 @@ public class PlayerMovement : MonoBehaviour
     }
     #endregion
 
-    #region OTHER MOVEMENT METHODS
-    /*private void Slide()
-    {
-        // Works the same as the Run but only in the y-axis
-        float speedDif = Data.slideSpeed - _rb.velocity.y;
-        float movement = speedDif * Data.slideAccel;
-        //So, we clamp the movement here to prevent any over corrections (these aren't noticeable in the Run)
-        //The force applied can't be greater than the (negative) speedDifference * by how many times a second FixedUpdate() is called
-        movement = Mathf.Clamp(movement, -Mathf.Abs(speedDif) * (1 / Time.fixedDeltaTime), Mathf.Abs(speedDif) * (1 / Time.fixedDeltaTime));
-
-        _rb.AddForce(movement * Vector2.down);
-    }*/
-    #endregion
-
     #region GENERAL METHODS
     private void SetGravityScale(float scale)
     {
         _rb.gravityScale = scale;
     }
-   /* void OnCollisionEnter2D(Collision2D collision)
-    {
-        if (collision.gameObject.tag == "Platform")
-        {
-            _platformRBody2D = collision.gameObject.GetComponent<Rigidbody2D>();
-            _IsOnPlatform = true;
-        }
-    }
-    void OnCollisionExit2D(Collision2D collision)
-    {
-        if (collision.gameObject.tag == "Platform")
-        {
-            _IsOnPlatform = false;
-            _platformRBody2D = null;
-        }
-    }*/
 
     /*void LoadGame(GameData data)
     {
@@ -396,54 +332,6 @@ public class PlayerMovement : MonoBehaviour
     void SaveGame(GameData data)
     {
         data.PlayerPosition = transform.position;
-    }*/
-
-    /*public void PlayerTakeDamage(GameData data)
-    {
-        StartCoroutine(Invunerability(data));
-        StartCoroutine(Knock(data));
-    }*/
-
-    /// <summary>
-    /// ITeleportable interface method implementation.
-    /// </summary>
-    /// <param name="position">Destination for teleport</param>
-    /*public void Teleport(Vector3 position)
-    {
-        transform.position = position;
-    }
-
-    private IEnumerator Knock(GameData data)
-    {
-        _rb.velocity = Vector2.zero;
-        _rb.AddForce(new Vector2(-10, 10), ForceMode2D.Impulse);
-        yield return new WaitForSeconds(1f);
-        _rb.velocity = Vector2.zero;
-    }*/
-
-    /*private IEnumerator Invunerability(GameData data)
-    {
-        data._canTakeDamage = false;
-        for (int i = 0; i < data._numberOfFlashes; i++)
-        {
-            _sr.color = new Color(1, 0, 0, 0.5f);
-            yield return new WaitForSeconds(data._iFramesDuration / (data._numberOfFlashes * 3));
-            _sr.color = Color.white;
-            yield return new WaitForSeconds(data._iFramesDuration / (data._numberOfFlashes * 3));
-        }
-
-        data._canTakeDamage = true;
-    }*/
-
-    /*public void PlayerDeath()
-    {
-        //Destroy(gameObject);
-        GameEventSystem.Instance.LoadData();
-    }*/
-
-    /*private void OnDestroy()
-    {
-        GameEventSystem.Instance.OnPlayerDead -= PlayerDeath;
     }*/
 
     #endregion
@@ -471,51 +359,31 @@ public class PlayerMovement : MonoBehaviour
     {
         return IsWallJumping && _rb.velocity.y > 0;
     }
-    public bool CanSlide()
-    {
-        if (_lastOnWallTime > 0 && !IsJumping && !IsWallJumping && _lastOnGroundTime <= 0)
-            return true;
-        else
-            return false;
-    }
     #endregion
+    //private Ray testRay;
 
     private void OnDrawGizmos()
     {
-        /*Gizmos.color = Color.red;
-        Gizmos.DrawWireCube(transform.position, new Vector3(1, 1, 1));*/
-
         Gizmos.color = Color.green;
         Gizmos.DrawWireCube(_groundCheckPoint.position, _groundCheckSize);
         Gizmos.color = Color.blue;
         Gizmos.DrawWireCube(_frontWallCheckPoint.position, _wallCheckSize);
         Gizmos.DrawWireCube(_backWallCheckPoint.position, _wallCheckSize);
+        Gizmos.color = Color.black;
+        //Gizmos.DrawLine(transform.position, testRay.origin);
     }
 
-    #region GETTER
-    public Vector2 MoveInput
+    
+    // MOVE OUT OF HERE
+    private void Shoot(Vector2 aimPoint)
     {
-        get { return _moveInput; }
-    }
+        /*Vector3 shootDirection = ray.direction;
+        testRay = ray;
+        Debug.Log($"ShootDir: {shootDirection}");
+        Debug.Log($"Ray origin: {ray.origin}");
+        _rb.AddForce(-shootDirection * 100f, ForceMode2D.Impulse);*/
 
-    public bool GetIsJumping
-    {
-        get { return IsJumping; }
+        Debug.Log($"Point: {aimPoint}");
+        _rb.AddForce(-aimPoint * 30f, ForceMode2D.Impulse);
     }
-
-    public bool GetIsGrounded
-    {
-        get { return _lastOnGroundTime > 0; }
-    }
-
-    public bool GetIsFalling
-    {
-        get { return _rb.velocity.y < 0; }
-    }
-
-    public bool GetIsSliding
-    {
-        get { return IsSliding; }
-    }
-    #endregion
 }
